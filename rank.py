@@ -11,11 +11,19 @@ class RankGenerator:
         task['bombs'] += 1
     elif stype == '0':
       task['verdict'] = 'Accepted'    
-      task['time'] = ttime # TODO: add bombs
+      task['time'] = float(ttime) - float(self.config['start_ts'])
+      if not 'bombs' in task:
+        task['bombs'] = 0
     else:
       pass
 
-  def GenerateRanks(self, records,users,tasks):
+  def AddBombs(self, timestamp, nobombs):
+    return timestamp + float(nobombs)*20.0*60.0 # each bomb is 20 minutes
+
+  def GenerateRanks(self, records, config):
+    self.config = config
+    users = config['users']
+    tasks = config['tasks']
     udata = {}
     for u in users:
       udata[u] = {}
@@ -39,6 +47,7 @@ class RankGenerator:
             udata[u]['tasks'][i]['verdict'] == 'Accepted'):
           score+=1
           totaltime+=float(udata[u]['tasks'][i]['time'])
+          totaltime = self.AddBombs(totaltime, udata[u]['tasks'][i]['bombs'])
       udata[u]['score'] = score
       udata[u]['total_time'] = totaltime
       res.append(udata[u])

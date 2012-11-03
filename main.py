@@ -29,6 +29,7 @@ def GetConfig():
       confreader = csv.reader(csvfile, delimiter=' ', quotechar='|')
       config['users'] = confreader.next()
       config['tasks'] = confreader.next()
+      config['task_names'] = confreader.next()
       delta = confreader.next()
       start = datetime.fromtimestamp(float(config['start_ts']))
       end = start + timedelta(hours = int(delta[0]), minutes = int(delta[1]), seconds = int(delta[2]))
@@ -122,12 +123,11 @@ current_records = purify(current_records, config)
 
 current_records = sorted(current_records, key = lambda x : int(x[0]))
 
-#WriteRecords(current_records)
-
-for x in current_records:
-  print x
+WriteRecords(current_records)
 
 rankg = RankGenerator()
-rankg.GenerateRanks(current_records, config['users'], config['tasks'])
+ranks = rankg.GenerateRanks(current_records, config)
+
+# render_acm(ranks, config)
 
 
