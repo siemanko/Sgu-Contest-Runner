@@ -1,4 +1,4 @@
-#!/bin/python
+#!/usr/bin/env python
 from sgu import *
 import csv
 import shutil
@@ -128,6 +128,13 @@ WriteRecords(current_records)
 rankg = RankGenerator()
 ranks = rankg.GenerateRanks(current_records, config)
 
-# render_acm(ranks, config)
+from xhpy.init import register_xhpy_module
+register_xhpy_module('render')
+from render import render_acm
 
-
+open("output.html", "wt").write(
+    render_acm(
+        tasks=zip(config["tasks"],
+                  config["task_names"],
+                  ranks["solution_count"]),
+        rankings=ranks['ranks']))

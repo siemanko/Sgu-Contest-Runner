@@ -150,16 +150,59 @@ class :footer(:xhpy:html-element):
         super(:xhpy:html-element, self).__init__(attributes, children)
         self.tagName = 'footer'
 
-def render_acm(tasks, teams):
+
+class :cs:task-list(:x:element):
+    attribute list tasks
+    def render(self):
+        tbody = <tbody />
+        table = \
+        <table class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th>Task ID</th>
+                    <th>Name</th>
+                    <th>Solve Count</th>
+                </tr>
+            </thead>
+            {tbody}
+        </table>
+
+        for task_id, task_name, solve_count in self.getAttribute('tasks'):
+            task_url = 'http://acm.sgu.ru/problem.php?contest=0&problem=' + \
+                task_id
+            badge_class = 'badge'
+            if solve_count >= 1:
+                badge_class = 'badge badge-info'
+
+            tbody.appendChild(
+                <tr>
+                    <td><a href={task_url}>{task_id}</a></td>
+                    <td><a href={task_url}>{task_name}</a></td>
+                    <td><span class={badge_class}>{solve_count}</span></td>
+                </tr>)
+
+        return table
+
+
+class :cs:rankings(:x:element):
+    attribute list rankings
+
+    def render(self):
+        return <div />
+
+
+def render_acm(tasks, rankings):
     title = "Cambridge ACM Eliminations 2012"
 
     problem_set_pane = \
     <x:frag>
         <h2>Problem Set</h2>
+        <cs:task-list tasks={tasks} />
     </x:frag>
     rankings_pane = \
     <x:frag>
         <h2>Rankings</h2>
+        <cs:rankings rankings={rankings} />
     </x:frag>
 
     page = \
