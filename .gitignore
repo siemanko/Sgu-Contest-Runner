@@ -1,4 +1,7 @@
 *.py[co]
+*.csv
+*.html
+.DS_Store
 
 # Packages
 *.egg
