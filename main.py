@@ -6,9 +6,37 @@ import time
 import sys
 import os
 from rank import *
+from datetime import datetime, timedelta
+import time
 
-tasks = [ '168', '311', '304' ]
-users = [ 'Reza_H', 'Andrei Heidelbacher', 'vjudge5' ]
+def GetStartTS():
+  res = 0
+  if FileInCwd('start_timestamp'):
+    with open('start_timestamp', 'r') as tsfile:
+      res = tsfile.read()
+  else:
+    res = str(time.time())
+    with open('start_timestamp', 'w') as tsfile:
+      tsfile.write(res)
+  return res
+
+def GetConfig():
+  config = {}
+  config['start_ts'] = GetStartTS()
+
+  if FileInCwd('contest.conf'):
+    with open('contest.conf', 'rb') as csvfile:
+      confreader = csv.reader(csvfile, delimiter=' ', quotechar='|')
+      config['users'] = confreader.next()
+      config['tasks'] = confreader.next()
+      delta = confreader.next()
+      start = datetime.fromtimestamp(float(config['start_ts']))
+      end = start + timedelta(hours = int(delta[0]), minutes = int(delta[1]), seconds = int(delta[2]))
+      config['end_ts'] = str(time.mktime(end.timetuple())) # Unix timestamp
+  else:
+    print 'Config file missing'
+    sys.exit(0)
+  return config
 
 def FileInCwd(name):
   return os.path.isfile(os.path.join(os.getcwd(), name))
@@ -24,6 +52,7 @@ def WriteRecords(records):
                             quotechar='|', quoting=csv.QUOTE_MINIMAL)
     for record in records:
       swriter.writerow(record)
+
 
 def ReadRecords():
   res = []
@@ -49,11 +78,15 @@ def RemoveRedundant(records, sids):
   return res
 
 # test that our user did our task and tests finished and error was not funny
-def purify(records):
+def purify(records, config):
   res = []
   # ADD CHECKING FOR TIME
   for row in records:
-    if (row[1] in users) and (str(row[3]) in tasks) and (str(row[4]) in ['0','2']):
+    if (row[1] in config['users'] and
+        str(row[3]) in config['tasks'] and
+        str(row[4]) in ['0','2'] and
+        float(config['start_ts']) <= float(row[2]) and
+        float(row[2]) <= float(config['end_ts'])):
       res.append(row)
   return res
 
@@ -64,7 +97,16 @@ if len(sys.argv) > 1:
       file_path = os.path.join(os.getcwd(), the_file)
       if os.path.isfile(file_path) and 'submit' in file_path:
         os.unlink(file_path)
+    if FileInCwd('start_timestamp'):
+      os.unlink('start_timestamp')
     sys.exit(0)
+
+
+config = GetConfig()
+print 'Contest started at', str(datetime.fromtimestamp(float(config['start_ts'])))
+print 'Contest started at', str(datetime.fromtimestamp(float(config['end_ts'])))
+print 'Competing users: ', config['users']
+print 'Contest exercises: ', config['tasks']
 
 sgu_reader = Sgu()
 records_new = sgu_reader.GetRecords()
@@ -76,18 +118,16 @@ records_new = RemoveRedundant(records_new, sids_old )
 current_records = records_new + records_old
 
 
-current_records = purify(current_records)
+current_records = purify(current_records, config)
 
 current_records = sorted(current_records, key = lambda x : int(x[0]))
 
-for r in current_records:
-  print r
+#WriteRecords(current_records)
 
-WriteRecords(current_records)
-
-
+for x in current_records:
+  print x
 
 rankg = RankGenerator()
-rankg.GenerateRanks(current_records, users, tasks)
+rankg.GenerateRanks(current_records, config['users'], config['tasks'])
 
 
