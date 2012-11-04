@@ -78,6 +78,15 @@ def RemoveRedundant(records, sids):
       res.append(r)
   return res
 
+def UniqueRecords(records):
+  last_seen = -1
+  res = []
+  for r in records:
+    if not last_seen == int(r[0]):
+      last_seen = int(r[0])
+      res.append(r)
+  return res
+
 # test that our user did our task and tests finished and error was not funny
 def purify(records, config):
   res = []
@@ -91,7 +100,7 @@ def purify(records, config):
       res.append(row)
   return res
 
-
+getall = False
 if len(sys.argv) > 1:
   if sys.argv[1] == 'clean':
     for the_file in os.listdir(os.getcwd()):
@@ -101,7 +110,8 @@ if len(sys.argv) > 1:
     if FileInCwd('start_timestamp'):
       os.unlink('start_timestamp')
     sys.exit(0)
-
+  if sys.argv[1] == 'readall':
+    getall = True
 
 config = GetConfig()
 print 'Contest started at', str(datetime.fromtimestamp(float(config['start_ts'])))
@@ -110,7 +120,7 @@ print 'Competing users: ', config['users']
 print 'Contest exercises: ', config['tasks']
 
 sgu_reader = Sgu()
-records_new = sgu_reader.GetRecords()
+records_new = sgu_reader.GetRecords(getall, config)
 records_old = ReadRecords()
 
 sids_old = GetSids(records_old)
@@ -122,11 +132,15 @@ current_records = records_new + records_old
 current_records = purify(current_records, config)
 
 current_records = sorted(current_records, key = lambda x : int(x[0]))
-
+current_records = UniqueRecords(current_records)
+ 
 WriteRecords(current_records)
 
 rankg = RankGenerator()
 ranks = rankg.GenerateRanks(current_records, config)
+
+for x in current_records:
+  print x
 
 from xhpy.init import register_xhpy_module
 register_xhpy_module('render')

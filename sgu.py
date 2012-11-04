@@ -118,21 +118,40 @@ class SguAutomataParser(HTMLParser):
         SubmitionEmiter.emiter.handle_parser_event('c', data)
 
 class Sgu:
-  def GetRecords(self):
+  def GetRecords(self, getall, config):
     # instantiate the parser and fed it some HTML
     SguAutomataParser.parser = SguAutomataParser()
     SguAutomata.automata = SguAutomata()
     SubmitionEmiter.emiter = SubmitionEmiter()
-    do_once = True
-    while(do_once):
-      do_once = False
+    startsubmit = ''
+    result = []
+    read_last = False
+    while(getall and not read_last):
+      sguurl = None
+      if startsubmit == '':
+        sguurl = 'http://acm.sgu.ru/status.php'
+      else:
+        sguurl = ''.join(['http://acm.sgu.ru/status.php?start=',startsubmit])
+      print 'Fetching ', sguurl
       try:
-        r = requests.get('http://acm.sgu.ru/status.php')
+        r = requests.get(sguurl)
       except:
         print 'Error fetching acm.sgu.ru status page'
-        continue
+        sys.exit(0)
       if not r:
         print 'Error fetching acm.sgu.ru status page'
-        continue
-      SguAutomataParser.parser.feed(r.content)
-      return SubmitionEmiter.emiter.get_result()
+        sys.exit(0)  
+      try:
+        SguAutomataParser.parser.feed(r.content)
+      except:
+        print 'Error parsing (kurwa...)'
+        sys.exit(0)
+      new_result = SubmitionEmiter.emiter.get_result()
+      minsid = 2000000000
+      for r in new_result:
+        if float(r[2]) < float(config['start_ts']):
+          read_last = True
+        minsid = min(minsid, int(r[0]))
+      startsubmit = str(minsid-1)
+      result = result + new_result
+    return result
