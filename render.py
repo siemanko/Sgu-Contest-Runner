@@ -3,7 +3,7 @@
 from xhpy.pylib import *
 
 class :cs:page(:x:element):
-    attribute str title
+    attribute str title @required
     children :cs:header, :cs:content, :cs:footer
 
     def render(self):
@@ -24,6 +24,10 @@ class :cs:page(:x:element):
             <style>{"""
                 body {
                     padding-top: 50px;
+                }
+
+                .table .task-score {
+                    text-align: center;
                 }
             """}</style>
         </head>
@@ -130,7 +134,7 @@ class :ui:tabbed-content(:x:element):
 
 
 class :ui:tab-pane(:x:element):
-    attribute str name,
+    attribute str name @required,
               bool active = False
 
     def render(self):
@@ -152,7 +156,7 @@ class :footer(:xhpy:html-element):
 
 
 class :cs:task-list(:x:element):
-    attribute list tasks
+    attribute list tasks @required
     def render(self):
         tbody = <tbody />
         table = \
@@ -185,10 +189,64 @@ class :cs:task-list(:x:element):
 
 
 class :cs:rankings(:x:element):
-    attribute list rankings
+    attribute list tasks @required,
+              list rankings @required
 
     def render(self):
-        return <div />
+        header_tasks = <x:frag />
+        for task_id, task_name, solve_count in self.getAttribute('tasks'):
+            task_url = 'http://acm.sgu.ru/problem.php?contest=0&problem=' + \
+                task_id
+            header_tasks.appendChild(
+                <th class="task-score">
+                    <a href={task_url} rel="tooltip" title={task_name}>
+                        {task_id}
+                    </a>
+                </th>)
+
+        tbody = <tbody />
+        table = \
+        <table class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th>Team</th>
+                    {header_tasks}
+                    <th>Score</th>
+                    <th>Time penalty</th>
+                </tr>
+            </thead>
+            {tbody}
+        </table>
+
+        for team in self.getAttribute('rankings'):
+            task_scores = <x:frag />
+            for task_score in team.get('tasks', []):
+                if task_score.get('verdict') == None:
+                    xhp = <span class="badge">-</span>
+                elif task_score.get('verdict') == 'Accepted':
+                    xhp = \
+                    <x:frag>
+                        <span class="badge badge-success">
+                            {task_score.get('bombs', 0)}
+                        </span>
+                        <br />
+                        {task_score.get('time')}
+                    </x:frag>
+                else:
+                    xhp = \
+                    <span class="badge badge-important">
+                        {task_score.get('bombs', 0)}
+                    </span>
+                task_scores.appendChild(<td class="task-score">{xhp}</td>)
+            tbody.appendChild(
+                <tr>
+                    <td>{team.get('user', 'Error')}</td>
+                    {task_scores}
+                    <td>{team.get('score', 0)}</td>
+                    <td>{team.get('total_time', 0)}</td>
+                </tr>)
+
+        return table
 
 
 def render_acm(tasks, rankings):
@@ -202,7 +260,7 @@ def render_acm(tasks, rankings):
     rankings_pane = \
     <x:frag>
         <h2>Rankings</h2>
-        <cs:rankings rankings={rankings} />
+        <cs:rankings tasks={tasks} rankings={rankings} />
     </x:frag>
 
     page = \
