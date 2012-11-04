@@ -64,7 +64,10 @@ class :cs:page(:x:element):
         </x:doctype>
 
 class :cs:header(:x:element):
+    attribute float end_timestamp
+
     def render(self):
+        end_timestamp = self.getAttribute('end_timestamp')
         return \
         <div class="navbar navbar-fixed-top">
             <div class="navbar-inner">
@@ -84,6 +87,12 @@ class :cs:header(:x:element):
                             </a>
                         </li>
                     </ul>
+                    {<div class="navbar-text pull-right">Time left:{' '}
+                        <span id="timeLeft" class={end_timestamp}>
+                            00:00:00
+                        </span>
+                    </div>
+                    if end_timestamp else <x:frag />}
                 </div>
             </div>
         </div>
@@ -108,8 +117,12 @@ class :cs:footer(:x:element):
                 </p>
                 <p>
                     Copyright 2012{' '}
-                    <a href="bct25@cam.ac.uk">Bogdan Tataroiu</a>{' '}and{' '}
-                    <a href="ss958@cam.ac.uk">Szymon Sidor</a>.
+                    <a href="mailto:bct25@cam.ac.uk">
+                        Bogdan-Cristian Tataroiu
+                    </a>{' '}and{' '}
+                    <a href="mailto:ss958@cam.ac.uk">
+                        Szymon Sidor
+                    </a>.
                 </p>
             </footer>
         </x:frag>
@@ -117,7 +130,6 @@ class :cs:footer(:x:element):
 
 class :ui:tabbed-content(:x:element):
     attribute str active
-
     children :ui:tab-pane, :ui:tab-pane*
 
     def render(self):
@@ -157,6 +169,7 @@ class :footer(:xhpy:html-element):
 
 class :cs:task-list(:x:element):
     attribute list tasks @required
+
     def render(self):
         tbody = <tbody />
         table = \
@@ -230,7 +243,7 @@ class :cs:rankings(:x:element):
                             {task_score.get('bombs', 0)}
                         </span>
                         <br />
-                        {self.get_penalty_string(task_score.get('time'))}
+                        {self.format_penalty(task_score.get('time'))}
                     </x:frag>
                 else:
                     xhp = \
@@ -248,17 +261,17 @@ class :cs:rankings(:x:element):
 
         return table
 
-    def get_penalty_string(self, ts):
-      ts = int(ts)
-      if(ts<60):
-        return "%ds" % (ts % 60)
-      elif(ts<3600):
-        return "%dm %ds" % (ts / 60, ts % 60)
-      else:
-        return "%dh %dm %ds" % (ts / 3600, (ts / 60)%60, ts % 60)
-      
+    def format_penalty(self, ts):
+        ts = int(ts)
+        if ts < 60:
+            return "%ds" % (ts % 60)
+        elif ts < 3600:
+            return "%dm %ds" % (ts / 60, ts % 60)
+        else:
+            return "%dh %dm %ds" % (ts / 3600, (ts / 60) % 60, ts % 60)
 
-def render_acm(tasks, rankings):
+
+def render_acm(tasks, rankings, end_timestamp = None):
     title = "Cambridge ACM Eliminations 2012"
 
     problem_set_pane = \
@@ -274,7 +287,7 @@ def render_acm(tasks, rankings):
 
     page = \
     <cs:page title={title}>
-        <cs:header />
+        <cs:header end_timestamp={end_timestamp} />
         <cs:content>
             <ui:tabbed-content active="problemset">
                 <ui:tab-pane name="problemset">

@@ -146,9 +146,10 @@ from xhpy.init import register_xhpy_module
 register_xhpy_module('render')
 from render import render_acm
 
-open("output.html", "wt").write(
+open('output.html', 'wt').write(
     render_acm(
-        tasks=zip(config["tasks"],
-                  config["task_names"],
-                  ranks["solution_count"]),
-        rankings=ranks['ranks']))
+        tasks=zip(config['tasks'],
+                  config['task_names'],
+                  ranks['solution_count']),
+        rankings=ranks['ranks'],
+        end_timestamp=config['end_ts']))
