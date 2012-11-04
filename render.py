@@ -230,7 +230,7 @@ class :cs:rankings(:x:element):
                             {task_score.get('bombs', 0)}
                         </span>
                         <br />
-                        {task_score.get('time')}
+                        {self.get_penalty_string(task_score.get('time'))}
                     </x:frag>
                 else:
                     xhp = \
@@ -243,11 +243,20 @@ class :cs:rankings(:x:element):
                     <td>{team.get('user', 'Error')}</td>
                     {task_scores}
                     <td>{team.get('score', 0)}</td>
-                    <td>{team.get('total_time', 0)}</td>
+                    <td>{int(team.get('total_time', 0))}</td>
                 </tr>)
 
         return table
 
+    def get_penalty_string(self, ts):
+      ts = int(ts)
+      if(ts<60):
+        return "%ds" % (ts % 60)
+      elif(ts<3600):
+        return "%dm %ds" % (ts / 60, ts % 60)
+      else:
+        return "%dh %dm %ds" % (ts / 3600, (ts / 60)%60, ts % 60)
+      
 
 def render_acm(tasks, rankings):
     title = "Cambridge ACM Eliminations 2012"
