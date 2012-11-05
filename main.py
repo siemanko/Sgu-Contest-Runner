@@ -124,10 +124,9 @@ records_new = sgu_reader.GetRecords(getall, config)
 records_old = ReadRecords()
 
 sids_old = GetSids(records_old)
-records_new = RemoveRedundant(records_new, sids_old )
+records_new = RemoveRedundant(records_new, sids_old)
 
 current_records = records_new + records_old
-
 
 current_records = purify(current_records, config)
 

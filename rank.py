@@ -41,14 +41,14 @@ class RankGenerator:
     for r in records:
       if self.UpdateTaskAndWasSolved(udata[r[1]]['tasks'][taskno[str(r[3])]],r[2], r[4]):
         solvedby[taskno[str(r[3])]] += 1
-      
+
     res = []
     for u in udata:
       udata[u]['user'] = u
       score = 0
       totaltime = 0.0
       for i in range(len(tasks)):
-        if ('verdict' in udata[u]['tasks'][i] and 
+        if ('verdict' in udata[u]['tasks'][i] and
             udata[u]['tasks'][i]['verdict'] == 'Accepted'):
           score+=1
           totaltime+=float(udata[u]['tasks'][i]['time'])

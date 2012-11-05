@@ -256,7 +256,7 @@ class :cs:rankings(:x:element):
                     <td>{team.get('user', 'Error')}</td>
                     {task_scores}
                     <td>{team.get('score', 0)}</td>
-                    <td>{int(team.get('total_time', 0))}</td>
+                    <td>{int(team.get('total_time', 0)) / 60}</td>
                 </tr>)
 
         return table

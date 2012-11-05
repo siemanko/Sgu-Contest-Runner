@@ -4,6 +4,7 @@ import csv
 from HTMLParser import HTMLParser
 from datetime import datetime, timedelta
 import time
+import sys
 
 def parseSaratovDate(datestr):
   return (datetime.strptime(datestr, "%d.%m.%y %H:%M")
@@ -70,8 +71,11 @@ class SubmitionEmiter:
   s_task = None
   s_result = None
   s_result_array = None
+
   def get_result(self):
-    return self.s_result_array
+    res = self.s_result_array[:]
+    self.s_result_array = []
+    return res
 
   def handle_parser_event(self,k, v):
     if(SguAutomata.automata.is_sgu_automata_accepting(k,v)):
@@ -87,6 +91,7 @@ class SubmitionEmiter:
         if v=='tr':
           if self.s_result_array == None:
             self.s_result_array = []
+            print '>>', self.s_id
           self.s_result_array.append([str(self.s_id),
                                  str(self.s_author),
                                  str(self.s_timestamp),
@@ -117,6 +122,7 @@ class SguAutomataParser(HTMLParser):
         #print "Encountered some data  :", data
         SubmitionEmiter.emiter.handle_parser_event('c', data)
 
+
 class Sgu:
   def GetRecords(self, getall, config):
     # instantiate the parser and fed it some HTML
@@ -126,7 +132,9 @@ class Sgu:
     startsubmit = ''
     result = []
     read_last = False
-    while(getall and not read_last):
+    doonce = True
+    while(doonce or (getall and not read_last)):
+      doonce = False
       sguurl = None
       if startsubmit == '':
         sguurl = 'http://acm.sgu.ru/status.php'
@@ -140,7 +148,7 @@ class Sgu:
         sys.exit(0)
       if not r:
         print 'Error fetching acm.sgu.ru status page'
-        sys.exit(0)  
+        sys.exit(0)
       try:
         SguAutomataParser.parser.feed(r.content)
       except:
